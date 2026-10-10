@@ -1,0 +1,49 @@
+{
+  "name": "dsh-fun-box",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Confetti celebrations, a playful composer widget, and hidden easter eggs for DeepSeek Harness",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json"
+  ],
+  "meta": {
+    "title": "彩蛋盒子 Fun Box",
+    "description": "任务完成撒彩带庆祝、输入框下的娱乐小挂件、Konami 隐秘彩蛋。"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "plugin",
+    "confetti",
+    "easter-egg",
+    "fun"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ybt96/dsh-fun-box"
+  }
+}

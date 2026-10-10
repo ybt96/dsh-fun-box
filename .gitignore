@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+*.pyc
+shots/
+diagnose.mjs
+verify-funbox.mjs
+.DS_Store
