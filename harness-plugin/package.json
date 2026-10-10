@@ -1,7 +1,6 @@
 {
   "name": "dsh-fun-box",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
   "description": "Confetti celebrations, a playful composer widget, and hidden easter eggs for DeepSeek Harness",
   "exports": {
@@ -45,5 +44,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ybt96/dsh-fun-box"
-  }
+  },
+  "author": "ybting"
 }
