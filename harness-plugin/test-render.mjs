@@ -6,7 +6,7 @@ const stateQueue = [];
 const fakeReact = {
   createElement: (type, props, ...children) => ({ type, props: props || {}, children }),
   Fragment: 'Fragment',
-  useState: (init) => [stateQueue.length ? stateQueue.shift() : init, () => {}],
+  useState: (init) => [stateQueue.length ? stateQueue.shift() : (typeof init === 'function' ? init() : init), () => {}],
   useEffect: () => {},
   useMemo: (fn) => fn(),
 };
@@ -50,15 +50,16 @@ function walk(node, fn) {
 
 // ---- 1. CSS 契约 ----
 stateQueue.length = 0;
+stateQueue.push([true, '', false, null]); // 注入展开态：面板需渲染才能断言按钮
 const widgetTree = byId['fun-box-widget']();
 let css = '';
 walk(widgetTree, (n) => { if (n.type === 'style') css += n.children.join(''); });
 assert(css.length > 2000, `CSS 样式表已渲染 (${css.length} chars)`);
 assert((css.match(/\{/g) || []).length === (css.match(/\}/g) || []).length, 'CSS 花括号配对完整');
-for (const kf of ['funbox-fall', 'funbox-fw', 'funbox-balloon', 'funbox-bounce-in', 'funbox-border-flow', 'funbox-shimmer', 'funbox-breathe']) {
+for (const kf of ['funbox-fall', 'funbox-fw', 'funbox-balloon', 'funbox-bounce-in', 'funbox-border-flow', 'funbox-shimmer', 'funbox-breathe', 'funbox-fab-pop', 'funbox-fab-glow', 'funbox-panel-in']) {
   assert(css.includes('@keyframes ' + kf), `keyframes ${kf} 存在`);
 }
-for (const sel of ['funbox-widget-wrap', 'funbox-btn-primary', 'funbox-toast::before', 'funbox-shape', 'funbox-fw', 'funbox-balloon']) {
+for (const sel of ['funbox-widget-wrap', 'funbox-btn-primary', 'funbox-toast::before', 'funbox-shape', 'funbox-fw', 'funbox-balloon', 'funbox-fab', 'funbox-fab-core', 'funbox-panel-anchor']) {
   assert(css.includes('.' + sel), `样式类 .${sel} 存在`);
 }
 assert(css.includes('backdrop-filter: blur'), '玻璃拟态 backdrop-filter 存在');
@@ -76,6 +77,8 @@ walk(widgetTree, (n) => {
   if (n.props && n.props.className) String(n.props.className).split(' ').forEach((c) => c && classes.add(c));
   if (n.type === 'button') buttonLabels.push(String(n.children && n.children.join ? n.children.join('') : ''));
 });
+assert(classes.has('funbox-fab'), '悬浮球 FAB 存在');
+assert(classes.has('funbox-fab-core'), 'FAB 玻璃内芯存在');
 assert(classes.has('funbox-widget-wrap'), '挂件渐变描边容器存在');
 assert(classes.has('funbox-widget'), '挂件玻璃卡片存在');
 assert(classes.has('funbox-brand'), '渐变品牌标题存在');

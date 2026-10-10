@@ -90,6 +90,17 @@ window.__ModuleLoader__.load({
       '.funbox-line { flex: 1 1 160px; min-width: 120px; font-size: 12px; color: var(--dsw-alias-label-secondary); }',
       '@keyframes funbox-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }',
       '.funbox-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--dsw-alias-label-primary); border: 1px solid var(--dsw-alias-state-warn-primary); background: linear-gradient(110deg, var(--dsw-alias-bg-layer-2) 28%, color-mix(in srgb, var(--dsw-alias-state-warn-primary) 42%, var(--dsw-alias-bg-layer-2)) 45%, var(--dsw-alias-bg-layer-2) 62%); background-size: 200% 100%; animation: funbox-shimmer 2.6s linear infinite; }',
+      '/* ---- floating ball (FAB) + bubble panel ---- */',
+      '@keyframes funbox-fab-pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.14); } 100% { transform: scale(1); opacity: 1; } }',
+      '@keyframes funbox-fab-glow { 0%,100% { box-shadow: 0 8px 24px color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, transparent); } 50% { box-shadow: 0 10px 38px color-mix(in srgb, var(--dsw-alias-state-warn-primary) 55%, transparent); } }',
+      '@keyframes funbox-panel-in { 0% { opacity: 0; transform: translateY(10px) scale(.82); } 100% { opacity: 1; transform: none; } }',
+      '.funbox-fab { position: fixed; z-index: 4; width: 52px; height: 52px; padding: 0; border: none; border-radius: 999px; background: linear-gradient(135deg, var(--dsw-alias-brand-primary), var(--dsw-alias-state-warn-primary), var(--dsw-alias-state-success-primary)); cursor: grab; touch-action: none; user-select: none; display: inline-flex; align-items: center; justify-content: center; animation: funbox-fab-pop .45s cubic-bezier(.2,1.35,.4,1) both, funbox-fab-glow 3.2s ease-in-out infinite; }',
+      '.funbox-fab:hover { transform: scale(1.08); }',
+      '.funbox-fab:active { cursor: grabbing; transform: scale(.92); }',
+      '.funbox-fab-core { width: 46px; height: 46px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent); backdrop-filter: blur(12px) saturate(1.5); -webkit-backdrop-filter: blur(12px) saturate(1.5); }',
+      '.funbox-panel-anchor { position: fixed; z-index: 4; width: 262px; }',
+      '.funbox-panel .funbox-widget { animation: funbox-panel-in .22s cubic-bezier(.2,1.25,.4,1) both; }',
+      '.funbox-panel .funbox-btn { justify-content: center; }',
     ].join('\n');
     function StyleTag() { return h('style', null, STYLE); }
 
@@ -222,19 +233,65 @@ window.__ModuleLoader__.load({
         toast.map((b) => h('div', { key: 't' + b.id, className: 'funbox-toast', role: 'status' }, b.message)));
     }
 
-    // ============ widget: toys under the composer ============
+    // ============ widget: floating ball (FAB) + bubble panel ============
     const RPS = { rock: '✊', paper: '✋', scissors: '✌️' };
     const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
 
     function FunBoxWidget() {
-      const [collapsed, setCollapsed] = useState(false);
+      const [open, setOpen] = useState(false);
       const [line, setLine] = useState('');
       const [badge, setBadge] = useState(badgeUnlocked);
+      const [pos, setPos] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('funbox-fab-pos')) || null; } catch (e) { return null; }
+      });
       useEffect(() => {
         const fn = () => setBadge(true);
         badgeListeners.add(fn);
         return () => { badgeListeners.delete(fn); };
       }, []);
+      useEffect(() => {
+        if (!open) return;
+        const onDown = (e) => {
+          const t = e.target;
+          if (t && t.closest && (t.closest('.funbox-panel-anchor') || t.closest('.funbox-fab'))) return;
+          setOpen(false);
+        };
+        const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('pointerdown', onDown);
+        document.addEventListener('keydown', onKey);
+        return () => {
+          document.removeEventListener('pointerdown', onDown);
+          document.removeEventListener('keydown', onKey);
+        };
+      }, [open]);
+
+      // 拖拽（>6px 判定为拖动，否则是点击开合）
+      const drag = useMemo(() => ({ active: false, moved: false, sx: 0, sy: 0, dx: 0, dy: 0 }), []);
+      const onPointerDown = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        drag.active = true; drag.moved = false;
+        drag.sx = e.clientX; drag.sy = e.clientY;
+        drag.dx = e.clientX - rect.left; drag.dy = e.clientY - rect.top;
+      };
+      const onPointerMove = (e) => {
+        if (!drag.active) return;
+        if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 6) drag.moved = true;
+        if (!drag.moved) return;
+        const vw = (typeof window !== 'undefined' && window.innerWidth) || 1440;
+        const vh = (typeof window !== 'undefined' && window.innerHeight) || 900;
+        setPos({
+          x: Math.max(8, Math.min(vw - 60, e.clientX - drag.dx)),
+          y: Math.max(8, Math.min(vh - 60, e.clientY - drag.dy)),
+        });
+      };
+      const onPointerUp = () => {
+        drag.active = false;
+        if (drag.moved) {
+          if (pos) { try { localStorage.setItem('funbox-fab-pos', JSON.stringify(pos)); } catch (e) { /* 忽略 */ } }
+        } else {
+          setOpen((o) => !o);
+        }
+      };
 
       const btn = (label, title, onClick, primary) =>
         h('button', { className: primary ? 'funbox-btn funbox-btn-primary' : 'funbox-btn', type: 'button', title, onClick }, label);
@@ -255,19 +312,23 @@ window.__ModuleLoader__.load({
         btn('🎉 ' + tr('celebrate'), tr('celebrate'), () => { celebrate(true); setLine(tr('cheered')); }, true),
         badge ? h('span', { key: 'badge', className: 'funbox-badge' }, '🏅 ' + tr('badge')) : null,
         line ? h('span', { key: 'line', className: 'funbox-line' }, line) : null,
-        btn(collapsed ? '▲' : '▼', collapsed ? tr('expand') : tr('collapse'), () => setCollapsed(!collapsed)),
+        btn('✕', tr('collapse'), () => setOpen(false)),
       ].filter(Boolean);
 
-      if (collapsed) {
-        return h(React.Fragment, null, h(StyleTag, null),
-          h('div', { className: 'funbox-widget-wrap' },
-            h('div', { className: 'funbox-widget' },
-              btn('🎪', tr('expand'), () => setCollapsed(false), true),
-              badge ? h('span', { className: 'funbox-badge' }, '🏅') : null)));
-      }
+      const vw = (typeof window !== 'undefined' && window.innerWidth) || 1440;
+      const fabStyle = pos ? { left: pos.x + 'px', top: pos.y + 'px' } : { right: '30px', bottom: '118px' };
+      const panelAnchor = pos
+        ? { left: Math.max(8, Math.min(pos.x - 210, vw - 272)) + 'px', top: Math.max(12, pos.y - 12) + 'px', transform: 'translateY(-100%)' }
+        : { right: '30px', bottom: '182px' };
+
       return h(React.Fragment, null, h(StyleTag, null),
-        h('div', { className: 'funbox-widget-wrap' },
-          h('div', { className: 'funbox-widget' }, body)));
+        open ? h('div', { key: 'panel', className: 'funbox-panel-anchor', style: panelAnchor },
+          h('div', { className: 'funbox-widget-wrap funbox-panel' },
+            h('div', { className: 'funbox-widget' }, body))) : null,
+        h('button', {
+          key: 'fab', className: 'funbox-fab', type: 'button', title: tr('expand'),
+          style: fabStyle, onPointerDown, onPointerMove, onPointerUp,
+        }, h('span', { className: 'funbox-fab-core' }, '🎪')));
     }
 
     // ============ turn watch: celebrate completed turns ============
