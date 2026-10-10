@@ -1,5 +1,7 @@
 # 🎪 dsh-fun-box — 彩蛋盒子
 
+[![npm version](https://img.shields.io/npm/v/dsh-fun-box)](https://www.npmjs.com/package/dsh-fun-box) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **一套彩蛋引擎，两种形态**：给 [DeepSeek Harness](https://github.com/deepseek-ai) 的可视化彩蛋插件（撒彩带、互动小挂件、Konami 隐秘彩蛋），以及给 Hermes / Claude Code / Codex 等 coding agent 的终端版彩蛋 skill（掷骰子、问卜、夸夸、运势、猜拳、撒花）。
 
 MIT Licensed · 无外部依赖 · 明暗主题自适应
@@ -57,7 +59,7 @@ cp -R skill ~/.agents/skills/fun-box
 - 任意位置按 **`↑↑↓↓←→←→BA`** → 彩蛋雨 + 🏅彩蛋猎人徽章
 - 任务完成自动轻庆祝；收尾命中「完成 / 搞定 / done…」自动大庆祝（历史回放不误触发）
 
-> Harness 插件从 npm 安装：`npm i -g dsh-fun-box` 或在插件面板直接搜包名（发布后生效）。
+> ✅ **已上架 npm**：在 Harness 插件面板直接搜 `dsh-fun-box` 安装，或 `npm i dsh-fun-box` —— [www.npmjs.com/package/dsh-fun-box](https://www.npmjs.com/package/dsh-fun-box)
 
 ## 自定义
 
